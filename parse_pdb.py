@@ -120,19 +120,14 @@ def get_ideal_lig_rcsb(ligand):
 
 
 def fix_lig(lig):
+    mole_ = Chem.MolFromPDBFile(f"{lig}.pdb")
     get_ideal_lig_rcsb(lig)
     mole_i = Chem.SDMolSupplier(f"{lig}_ideal.sdf")[0]
-    mole_ = Chem.MolFromPDBFile(f"{lig}.pdb")
-    AllChem.AssignBondOrdersFromTemplate(mole_i, mole_)
+    mole_ = AllChem.AssignBondOrdersFromTemplate(mole_i, mole_)
     writer = Chem.SDWriter(f"{lig}.sdf")
     writer.write(mole_)
     writer.close()
 
-def ligand_to_pdbqt(sdf):
-    pass
-
-def ligand_to_mol2():
-    pass
 
 def fix_missing_res(pdb):
     fixer = PDBFixer(filename=f"{pdb}.pdb")
@@ -143,43 +138,12 @@ def fix_missing_res(pdb):
 
 
 
-def clean_pdb_for_meeko(pdb_file):
-    """Clean PDB file to avoid RDKit valence errors"""
-    import re
-    
-    cleaned_file = pdb_file.replace('.pdb', '_cleaned_for_meeko.pdb')
-    
-    with open(pdb_file, 'r') as f:
-        lines = f.readlines()
-    
-    cleaned_lines = []
-    for line in lines:
-        if line.startswith('ATOM'):
-            # Fix common issues that cause valence errors
-            # Remove alternative location indicators
-            if len(line) > 16:
-                line = line[:16] + ' ' + line[17:]
-            
-            # Fix occupancy and B-factor if they're problematic
-            if len(line) > 54:
-                # Set occupancy to 1.00 and reasonable B-factor
-                line = line[:54] + '  1.00 20.00' + line[66:]
-        
-        cleaned_lines.append(line)
-    
-    with open(cleaned_file, 'w') as f:
-        f.writelines(cleaned_lines)
-    
-    return cleaned_file
-
-
 print("""
 
   How can I help you?
   1) seprate ligand and receptor
   2) pdb ligand to sdf file
-  3) fix missing res and atoms
-  4) clean for meeko
+  3) fix residues for md
 
 """)
 
@@ -189,14 +153,10 @@ if int(option) == 1:
     pdb = input("Enter the pdb with .pdb ext: ")
     sep_lig_rec(pdb)
 elif int(option) == 2:
-    print("Attention! This should only be the ligand saved from pervieus step")
     lig = input("Enter the ligand name: ")
     fix_lig(lig)
 elif int(option) == 3:
     print("Enter the pdb id without ext")
     pdb = input("Ehter the pdb id: ")
     fix_missing_res(pdb)
-elif int(option) == 4:
-    pdb = input("Enter the pdb file name: ")
-    clean_pdb_for_meeko(pdb)
 
